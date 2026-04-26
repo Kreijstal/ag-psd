@@ -46,6 +46,34 @@ describe('PsdReader', () => {
 		expect(psd.width).equal(300);
 	});
 
+	it('reads psd.js compatibility fixtures', () => {
+		const fixtures = [
+			{ file: 'locked.psd', width: 1, height: 1, colorMode: 3, bitsPerChannel: 8, layers: 4 },
+			{ file: 'example.psd', width: 900, height: 600, colorMode: 3, bitsPerChannel: 8, layers: 24 },
+			{ file: 'example-cmyk.psd', width: 900, height: 600, colorMode: 4, bitsPerChannel: 8, layers: 24 },
+			{ file: 'example-greyscale.psd', width: 900, height: 600, colorMode: 1, bitsPerChannel: 8, layers: 24 },
+			{ file: 'example16.psd', width: 900, height: 600, colorMode: 3, bitsPerChannel: 16, layers: 24 },
+		];
+
+		const countLayers = (layers: Layer[] = []): number =>
+			layers.reduce((count, layer) => count + 1 + countLayers(layer.children), 0);
+
+		for (const fixture of fixtures) {
+			const psd = readPsdFromFile(path.join(testFilesPath, 'external', 'psdjs', fixture.file), {
+				...opts,
+				throwForMissingFeatures: false,
+				skipLinkedFilesData: true,
+			});
+
+			expect(psd.width, fixture.file).equal(fixture.width);
+			expect(psd.height, fixture.file).equal(fixture.height);
+			expect(psd.colorMode, fixture.file).equal(fixture.colorMode);
+			expect(psd.bitsPerChannel, fixture.file).equal(fixture.bitsPerChannel);
+			expect(psd.canvas, fixture.file).ok;
+			expect(countLayers(psd.children), fixture.file).equal(fixture.layers);
+		}
+	});
+
 	it.skip('duplicate smart', () => {
 		const psd = readPsdFromFile(path.join('resources', 'src.psd'), { ...opts });
 

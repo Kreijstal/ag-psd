@@ -9,7 +9,7 @@ interface ChannelInfo {
 	length: number;
 }
 
-export const supportedColorModes = [ColorMode.Bitmap, ColorMode.Grayscale, ColorMode.RGB, ColorMode.Indexed];
+export const supportedColorModes = [ColorMode.Bitmap, ColorMode.Grayscale, ColorMode.RGB, ColorMode.Indexed, ColorMode.CMYK];
 const colorModes = ['bitmap', 'grayscale', 'indexed', 'RGB', 'CMYK', 'multichannel', 'duotone', 'lab'];
 
 function setupGrayscale(data: PixelData) {
@@ -873,17 +873,24 @@ function readImageData(reader: PsdReader, psd: Psd) {
 		}
 		case ColorMode.CMYK: {
 			if (bitsPerChannel !== 8) throw new Error('bitsPerChannel Not supproted');
-			if (psd.channels !== 4) throw new Error(`Invalid channel count`);
+			if (psd.channels !== 4 && psd.channels !== 5) throw new Error(`Invalid channel count`);
 
 			const channels = [0, 1, 2, 3];
-			if (reader.globalAlpha) channels.push(4);
+			if (psd.channels > 4 || reader.globalAlpha) channels.push(4);
 
 			if (compression === Compression.RawData) {
-				throw new Error(`Not implemented`);
-				// TODO: ...
-				// for (let i = 0; i < channels.length; i++) {
-				// 	readDataRaw(reader, imageData, channels[i], psd.width, psd.height);
-				// }
+				const cmykImageData: PixelData = {
+					width: imageData.width,
+					height: imageData.height,
+					data: new Uint8Array(imageData.width * imageData.height * 5),
+				};
+
+				for (let i = 0; i < channels.length; i++) {
+					const data = readBytes(reader, psd.width * psd.height);
+					readDataRaw(data, cmykImageData, bitsPerChannel, 5, channels[i]);
+				}
+
+				cmykToRgb(cmykImageData, imageData, true);
 			} else if (compression === Compression.RleCompressed) {
 				const cmykImageData: PixelData = {
 					width: imageData.width,
