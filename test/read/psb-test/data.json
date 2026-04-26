@@ -223,9 +223,9 @@
       "blendInteriorElements": false,
       "knockout": false,
       "protected": {
-        "transparency": false,
-        "composite": false,
-        "position": false
+        "transparency": true,
+        "composite": true,
+        "position": true
       },
       "layerColor": "none",
       "timestamp": 1563097343.0355046,

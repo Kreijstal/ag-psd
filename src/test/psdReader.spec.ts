@@ -71,6 +71,13 @@ describe('PsdReader', () => {
 			expect(psd.bitsPerChannel, fixture.file).equal(fixture.bitsPerChannel);
 			expect(psd.canvas, fixture.file).ok;
 			expect(countLayers(psd.children), fixture.file).equal(fixture.layers);
+
+			if (fixture.file === 'locked.psd') {
+				expect(psd.children![0].protected, 'transparency lock').eql({ transparency: true, composite: false, position: false });
+				expect(psd.children![1].protected, 'composite lock').eql({ transparency: false, composite: true, position: false });
+				expect(psd.children![2].protected, 'position lock').eql({ transparency: false, composite: false, position: true });
+				expect(psd.children![3].protected, 'all lock sentinel').eql({ transparency: true, composite: true, position: true });
+			}
 		}
 	});
 

@@ -691,10 +691,11 @@ addHandler(
 	hasKey('protected'),
 	(reader, target) => {
 		const flags = readUint32(reader);
+		const allLocked = flags === 0x80000000;
 		target.protected = {
-			transparency: (flags & 0x01) !== 0,
-			composite: (flags & 0x02) !== 0,
-			position: (flags & 0x04) !== 0,
+			transparency: allLocked || (flags & 0x01) !== 0,
+			composite: allLocked || (flags & 0x02) !== 0,
+			position: allLocked || (flags & 0x04) !== 0,
 		};
 
 		if (flags & 0x08) target.protected.artboards = true;
